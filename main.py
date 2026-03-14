@@ -92,10 +92,13 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=503, detail="FreeFlow client not initialized")
     
     try:
+        print(f"📝 Received request with {len(request.messages)} messages")
+        
         # Convert messages to dict format
         messages_dict = [msg.dict() for msg in request.messages]
         
         # Call FreeFlow client
+        print("🤖 Calling FreeFlow client...")
         response = client.chat(
             messages=messages_dict,
             temperature=request.temperature,
@@ -103,18 +106,31 @@ async def chat(request: ChatRequest):
             model=request.model
         )
         
+        print(f"✅ Response received from provider: {response.provider}")
+        
+        # Convert Usage object to dictionary if it exists
+        usage_dict = None
+        if hasattr(response, 'usage') and response.usage is not None:
+            # If usage is a Usage object, convert to dict
+            if hasattr(response.usage, '__dict__'):
+                usage_dict = response.usage.__dict__
+            else:
+                usage_dict = dict(response.usage)
+        
         return ChatResponse(
             content=response.content,
             provider=response.provider,
             model=response.model or "default",
-            usage=getattr(response, 'usage', None)
+            usage=usage_dict  # Now it's a dictionary, not an object
         )
         
     except NoProvidersAvailableError as e:
         print(f"❌ All providers exhausted: {e}")
         raise HTTPException(status_code=429, detail="All AI providers rate limited. Please try again later.")
     except Exception as e:
-        print(f"❌ Chat error: {e}")
+        print(f"❌ Chat error: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/providers")
