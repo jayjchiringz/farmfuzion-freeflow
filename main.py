@@ -14,7 +14,12 @@ app = FastAPI(title="FreeFlow LLM Service for FarmFuzion")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://farm-fuzion-backend.onrender.com", "http://localhost:3001"],
+    allow_origins=["https://farm-fuzion-backend.onrender.com",
+                   "http://localhost:3001",
+                   "https://kpa-health-ui.onrender.com",
+                   "https://kpa-health-api.onrender.com",
+    ],
+    
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
